@@ -146,358 +146,549 @@ namespace {
 
         /*! ctor.
          */
-        Runner(SDL_Window* window, Camera* camera) : window_(window)
-                                                   , camera_(camera) {
-            static const unsigned width = 30;
-            static const unsigned height = 30;
+        Runner(SDL_Window* window, int screenWidth, int screenHeight) : window_(window)
+                                                                      , backgroundColor_(0.0, 0.0, 0.0, 1.0)
+                                                                      , gridEnabled_(true)
+                                                                      , gridColor_(0.0, 0.0, 0.0, 1.0) {
+        // Init camera defaults
+        static float xPos = 0;
+        static float yPos = 0;
+        static float zPos = 0;
+        static float fov  = 12.5;
+        static float zFar = 1000.0;
+        static float zNear = 0.01;
 
-            // Load boxes
-            unsigned boxTAO1[] = {
-                render::load_texture_from_data(brick_wall_png, brick_wall_png_len, false),
-                render::load_texture_from_data(awesome_face_png, awesome_face_png_len, true)
-            };
+        // Init. Camera
+        camera_ = std::make_shared<Camera>(calc::vec3f(xPos, yPos, zPos),
+                                           fov,
+                                           zFar,
+                                           zNear,
+                                           screenWidth,
+                                           screenHeight);
 
-            unsigned boxTAO2[] = {
-                boxTAO1[0],
-                render::load_texture_from_data(shocked_face_png, shocked_face_png_len, true)
-            };
+        // Load boxes
+        unsigned boxTAO1[] = {
+            render::load_texture_from_data(brick_wall_png, brick_wall_png_len, false),
+            render::load_texture_from_data(awesome_face_png, awesome_face_png_len, true)
+        };
 
-            unsigned boxTAO3[] = {
-                boxTAO1[0],
-                render::load_texture_from_data(incredulous_face_png, incredulous_face_png_len, true)
-            };
+        unsigned boxTAO2[] = {
+            boxTAO1[0],
+            render::load_texture_from_data(shocked_face_png, shocked_face_png_len, true)
+        };
 
-            unsigned wallTAO[] = {
-                boxTAO1[0],
-                boxTAO1[0],
-            };
+        unsigned boxTAO3[] = {
+            boxTAO1[0],
+            render::load_texture_from_data(incredulous_face_png, incredulous_face_png_len, true)
+        };
 
-            textureHandles_.push_back(render::load_texture_from_data(awesome_face_png,
-                                                                     awesome_face_png_len,
-                                                                     true,
-                                                                     false));
-            textureHandles_.push_back(render::load_texture_from_data(shocked_face_png,
-                                                                     shocked_face_png_len,
-                                                                     true,
-                                                                     false));
-            textureHandles_.push_back(render::load_texture_from_data(incredulous_face_png,
-                                                                     incredulous_face_png_len,
-                                                                     true,
-                                                                     false));
+        unsigned wallTAO[] = {
+            boxTAO1[0],
+            boxTAO1[0],
+        };
 
-            ballObject_[0] = std::make_shared<render::Box>(boxTAO1, (sizeof(boxTAO1) / sizeof(unsigned)), 1);
-            ballObject_[0]->push_back(calc::mat4f::identity());
+        textureHandles_.push_back(render::load_texture_from_data(awesome_face_png,
+                                                                 awesome_face_png_len,
+                                                                 true,
+                                                                 false));
+        textureHandles_.push_back(render::load_texture_from_data(shocked_face_png,
+                                                                 shocked_face_png_len,
+                                                                 true,
+                                                                 false));
+        textureHandles_.push_back(render::load_texture_from_data(incredulous_face_png,
+                                                                 incredulous_face_png_len,
+                                                                 true,
+                                                                 false));
 
-            ballObject_[1] = std::make_shared<render::Box>(boxTAO2, (sizeof(boxTAO2) / sizeof(unsigned)), 1);
-            ballObject_[1]->push_back(calc::mat4f::identity());
+        ballObject_[0] = std::make_shared<render::Box>(boxTAO1, (sizeof(boxTAO1) / sizeof(unsigned)), 1);
+        ballObject_[0]->push_back(calc::mat4f::identity());
 
-            ballObject_[2] = std::make_shared<render::Box>(boxTAO3, (sizeof(boxTAO3) / sizeof(unsigned)), 1);
-            ballObject_[2]->push_back(calc::mat4f::identity());
+        ballObject_[1] = std::make_shared<render::Box>(boxTAO2, (sizeof(boxTAO2) / sizeof(unsigned)), 1);
+        ballObject_[1]->push_back(calc::mat4f::identity());
 
-            // Load map...
-            float cageWidth = width + (width % 2);
-            cageWidth_ = cageWidth;
+        ballObject_[2] = std::make_shared<render::Box>(boxTAO3, (sizeof(boxTAO3) / sizeof(unsigned)), 1);
+        ballObject_[2]->push_back(calc::mat4f::identity());
 
-            float cageLength = height + (height % 2);
-            cageLength_ = cageLength;
+        // Load map...
+        float cageWidth = 30;
+        cageWidth_ = cageWidth;
 
-            float gridWidth = 2 * cageWidth;
-            float gridLength = 2 * cageLength;
+        float cageLength = 30;
+        cageLength_ = cageLength;
 
-            // Load grid tiles
-            std::vector<float> grid = copy_matrix_data(build_grid(gridWidth, gridLength));
+        float gridWidth = 2 * cageWidth;
+        float gridLength = 2 * cageLength;
 
-            gridTile_ = std::make_shared<render::GridSquare>(gridWidth * gridLength);
-            gridTile_->reset(grid.data(), (grid.size() / 16));
+        // Load grid tiles
+        std::vector<float> grid = copy_matrix_data(build_grid(gridWidth, gridLength));
 
-            // Load wall
-            std::vector<float> wall = copy_matrix_data(build_wall(cageWidth, cageLength));
+        gridTile_ = std::make_shared<render::GridSquare>(gridWidth * gridLength);
+        gridTile_->reset(grid.data(), (grid.size() / 16));
 
-            wallObject_ = std::make_shared<render::Box>(wallTAO,
-                                                        sizeof(wallTAO) / sizeof(unsigned),
-                                                        cageWidth * cageLength);
-            wallObject_->reset(wall.data(), (wall.size() / 16));
+        // Load wall
+        std::vector<float> wall = copy_matrix_data(build_wall(cageWidth, cageLength));
 
-            // Load dry grass tiles...
-            unsigned dryGrassTextureTAO = render::load_texture_from_data(dry_grass_png, dry_grass_png_len, false);
-            unsigned dryGrassTileTAO[] = {
-                dryGrassTextureTAO,
-                dryGrassTextureTAO
-            };
+        wallObject_ = std::make_shared<render::Box>(wallTAO,
+                                                    sizeof(wallTAO) / sizeof(unsigned),
+                                                    cageWidth * cageLength);
+        wallObject_->reset(wall.data(), (wall.size() / 16));
 
-            dryGrassTile_ = std::make_shared<render::Square>(dryGrassTileTAO,
-                                                             sizeof(dryGrassTileTAO) / sizeof(unsigned),
-                                                             gridWidth * gridLength);
+        // Load dry grass tiles...
+        unsigned dryGrassTextureTAO = render::load_texture_from_data(dry_grass_png, dry_grass_png_len, false);
+        unsigned dryGrassTileTAO[] = {
+            dryGrassTextureTAO,
+            dryGrassTextureTAO
+        };
 
-            int gridMaxLength = gridLength / 2;
-            int gridMinLength = -gridMaxLength;
+        dryGrassTile_ = std::make_shared<render::Square>(dryGrassTileTAO,
+                                                         sizeof(dryGrassTileTAO) / sizeof(unsigned),
+                                                         gridWidth * gridLength);
 
-            int gridMaxWidth = gridWidth / 2;
-            int gridMinWidth = -gridMaxWidth;
+        int gridMaxLength = gridLength / 2;
+        int gridMinLength = -gridMaxLength;
 
-            int cageMaxLength = cageLength / 2;
-            int cageMinLength = -cageMaxLength;
+        int gridMaxWidth = gridWidth / 2;
+        int gridMinWidth = -gridMaxWidth;
 
-            int cageMaxWidth = cageWidth / 2;
-            int cageMinWidth = -cageMaxWidth;
+        int cageMaxLength = cageLength / 2;
+        int cageMinLength = -cageMaxLength;
 
-            // Load dry grass coordinates
-            calc::mat4f mat = calc::mat4f::identity();
+        int cageMaxWidth = cageWidth / 2;
+        int cageMinWidth = -cageMaxWidth;
 
-            // Top field
-            for (int i = cageMaxLength; i <= gridMaxLength; ++i)
+        // Load dry grass coordinates
+        calc::mat4f mat = calc::mat4f::identity();
+
+        // Top field
+        for (int i = cageMaxLength; i <= gridMaxLength; ++i)
+        {
+            for (int j = gridMinWidth; j <= gridMaxWidth; ++j)
             {
-                for (int j = gridMinWidth; j <= gridMaxWidth; ++j)
-                {
-                    mat[3][0] = j;
-                    mat[3][1] = i;
-                    dryGrassTile_->push_back(mat);
-                }
+                mat[3][0] = j;
+                mat[3][1] = i;
+                dryGrassTile_->push_back(mat);
+            }
+        }
+
+        // Right field
+        for (int i = cageMinLength; i <= cageMaxLength; ++i)
+        {
+            for (int j = gridMinWidth; j <= cageMinWidth + 1; ++j)
+            {
+                mat[3][0] = j;
+                mat[3][1] = i;
+                dryGrassTile_->push_back(mat);
+            }
+        }
+
+        // Left field
+        for (int i = cageMinLength; i <= cageMaxLength; ++i)
+        {
+            for (int j = cageMaxWidth - 1; j <= gridMaxWidth; ++j)
+            {
+                mat[3][0] = j;
+                mat[3][1] = i;
+                dryGrassTile_->push_back(mat);
+            }
+        }
+
+        // Bottom field
+        for (int i = gridMinLength; i <= cageMinLength; ++i)
+        {
+            for (int j = gridMinWidth; j <= gridMaxWidth; ++j)
+            {
+                mat[3][0] = j;
+                mat[3][1] = i;
+                dryGrassTile_->push_back(mat);
+            }
+        }
+
+        // Load fresh grass tiles...
+        unsigned grassTextureTAO = render::load_texture_from_data(dark_grass_png, dark_grass_png_len, false);
+        unsigned grassTileTAO[] = {
+            grassTextureTAO,
+            grassTextureTAO
+        };
+
+        grassTile_ = std::make_shared<render::Square>(grassTileTAO,
+                                                      sizeof(grassTileTAO) / sizeof(unsigned),
+                                                      cageWidth * cageLength);
+
+        const int wallThickness = 2;
+
+        // Load fresh grass coordinates
+        for (int i = cageMinLength + wallThickness; i <= cageMaxLength - wallThickness; ++i)
+        {
+            for (int j = cageMinWidth + wallThickness; j <= cageMaxWidth - wallThickness; ++j)
+            {
+                grassTile_->push_back(calc::transpose([i, j]() {
+
+                    calc::mat4f mat = calc::mat4f::identity();
+                    mat[0][3] = j;
+                    mat[1][3] = i;
+                    mat[2][3] = 0;
+                    return mat;
+                }()));
+            }
+        }
+    }
+
+    /*! Run loop
+     */
+    void run() {
+
+        //Handle events on queue
+        SDL_Event e;
+        while (SDL_PollEvent(&e) != 0)
+        {
+            if (e.type == SDL_QUIT) {
+                return;
             }
 
-            // Right field
-            for (int i = cageMinLength; i <= cageMaxLength; ++i)
+            switch (e.type)
             {
-                for (int j = gridMinWidth; j <= cageMinWidth + 1; ++j)
+                case SDL_WINDOWEVENT:
                 {
-                    mat[3][0] = j;
-                    mat[3][1] = i;
-                    dryGrassTile_->push_back(mat);
+                    on_window_event(e);
+                    break;
                 }
-            }
 
-            // Left field
-            for (int i = cageMinLength; i <= cageMaxLength; ++i)
-            {
-                for (int j = cageMaxWidth - 1; j <= gridMaxWidth; ++j)
+                // Handle keypress with current mouse position
+                case SDL_TEXTINPUT:
                 {
-                    mat[3][0] = j;
-                    mat[3][1] = i;
-                    dryGrassTile_->push_back(mat);
-                }
-            }
-
-            // Bottom field
-            for (int i = gridMinLength; i <= cageMinLength; ++i)
-            {
-                for (int j = gridMinWidth; j <= gridMaxWidth; ++j)
-                {
-                    mat[3][0] = j;
-                    mat[3][1] = i;
-                    dryGrassTile_->push_back(mat);
-                }
-            }
-
-            // Load fresh grass tiles...
-            unsigned grassTextureTAO = render::load_texture_from_data(dark_grass_png, dark_grass_png_len, false);
-            unsigned grassTileTAO[] = {
-                grassTextureTAO,
-                grassTextureTAO
-            };
-
-            grassTile_ = std::make_shared<render::Square>(grassTileTAO,
-                                                          sizeof(grassTileTAO) / sizeof(unsigned),
-                                                          cageWidth * cageLength);
-
-            const int wallThickness = 2;
-
-            // Load fresh grass coordinates
-            for (int i = cageMinLength + wallThickness; i <= cageMaxLength - wallThickness; ++i)
-            {
-                for (int j = cageMinWidth + wallThickness; j <= cageMaxWidth - wallThickness; ++j)
-                {
-                    grassTile_->push_back(calc::transpose([i, j]() {
-
-                        calc::mat4f mat = calc::mat4f::identity();
-                        mat[0][3] = j;
-                        mat[1][3] = i;
-                        mat[2][3] = 0;
-                        return mat;
-                    }()));
+                    on_text_input(e);
+                    break;
                 }
             }
         }
 
-        /*! Run loop
-         */
-        void run() {
+        render();
+    }
 
-            //Handle events on queue
-            SDL_Event e;
-            while (SDL_PollEvent(&e) != 0)
-            {
-                if (e.type == SDL_QUIT) {
-                    return;
-                }
+    void enable_grid(bool state) {
+        gridEnabled_ = state;
+    }
 
-                switch (e.type)
-                {
-                    case SDL_WINDOWEVENT:
-                    {
-                        on_window_event(e);
-                        break;
-                    }
+    bool get_grid_state() const {
+        return gridEnabled_;
+    }
 
-                    // Handle keypress with current mouse position
-                    case SDL_TEXTINPUT:
-                    {
-                        on_text_input(e);
-                        break;
-                    }
-                }
-            }
+    void set_background_color(const calc::vec4f& vec) {
+        backgroundColor_ = vec;
+    }
 
-            render();
+    void get_background_color(const calc::vec4f& vec) {
+        backgroundColor_ = vec;
+    }
+
+    void set_grid_color(const calc::vec4f& vec) {
+        gridColor_ = vec;
+    }
+
+    const calc::vec4f& get_grid_color() const {
+        return gridColor_;
+    }
+
+    BallData& get_ball() {
+        return ballData_;
+    }
+
+    const BallData& get_ball() const {
+        return ballData_;
+    }
+
+    Camera& get_camera() {
+        return *camera_;
+    }
+
+    const Camera& get_camera() const {
+        return *camera_;
+    }
+
+private:
+
+    /*! Helper
+     *! Evt. handler
+     */
+    void on_window_event(const SDL_Event& e) {
+
+        if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            unsigned screenWidth = e.window.data1;
+            unsigned screenHeight = e.window.data2;
+            glViewport(0, 0, screenWidth, screenHeight);
+
+            // Update camera
+            Camera& refcamera = *camera_;
+            refcamera.resize(screenWidth, screenHeight);
+            refcamera.update();
+        }
+    }
+
+    /*! Helper
+     *! Evt. handler
+     */
+    void on_text_input(const SDL_Event&) {}
+
+    /*! Helper
+     *! Renders the scene
+     */
+    void render() {
+        // Clear it
+        glClearColor(backgroundColor_[0],
+                     backgroundColor_[1],
+                     backgroundColor_[2],
+                     1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        const calc::mat4f& lookAt     = camera_->get_device_look_at();
+        const calc::mat4f& projection = camera_->get_device_projection();
+        // Maybe draw the grid
+        if (gridEnabled_)
+        {
+            gridDraw_.use();
+            gridDraw_.set_color(gridColor_);
+            gridDraw_.set_scene(lookAt, projection);
+            gridTile_->draw();
         }
 
-    private:
+        // Draw the wall
+        mainDraw_.use();
+        mainDraw_.set_scene(lookAt, projection);
+        wallObject_->draw();
 
-        /*! Helper
-         *! Evt. handler
-         */
-        void on_window_event(const SDL_Event& e) {
+        // Draw the grass inside the cage
+        grassTile_->draw();
+        // Draw the grass outside the cage
+        dryGrassTile_->draw();
 
-            if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
-            {
-                unsigned screenWidth = e.window.data1;
-                unsigned screenHeight = e.window.data2;
-                glViewport(0, 0, screenWidth, screenHeight);
+        // Draw the box
+        calc::vec3f& direction = ballData_.direction;
+        calc::vec3f& speed = ballData_.speed;
+        calc::mat4f& translation = ballData_.translation;
 
-                // Update camera
-                Camera& refcamera = *camera_;
-                refcamera.resize(screenWidth, screenHeight);
-                refcamera.update();
-            }
+        translation[2][3] = -1.0;
+        float x = (translation[0][3] += speed[0] * direction[0]);
+        float y = (translation[1][3] += speed[1] * direction[1]);
+
+        // Bounce back on wall hit
+        float hitOffset = 3.0;
+        if (x < +hitOffset - (cageWidth_ / 2) ||
+            x > -hitOffset + (cageWidth_ / 2)) {
+            direction[0] *= -1;
         }
 
-        /*! Helper
-         *! Evt. handler
-         */
-        void on_text_input(const SDL_Event&) {}
-
-        /*! Helper
-         *! Renders the scene
-         */
-        void render() {
-#if 0
-            glClearColor(backgroundColor[0],
-                         backgroundColor[1],
-                         backgroundColor[2],
-                         1.0);
-#endif
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            const calc::mat4f& lookAt     = camera_->get_device_look_at();
-            const calc::mat4f& projection = camera_->get_device_projection();
-#if 0
-            // Maybe draw the grid
-            if (enableGrid)
-#endif
-            {
-                gridDraw_.use();
-#if 0
-                gridDraw_.set_color(calc::vec4f(gridColor[0],
-                                                gridColor[1],
-                                                gridColor[2],
-                                                1.0));
-#endif
-                gridDraw_.set_scene(lookAt, projection);
-                gridTile_->draw();
-            }
-
-            // Draw the wall
-            mainDraw_.use();
-            mainDraw_.set_scene(lookAt, projection);
-            wallObject_->draw();
-
-            // Draw the grass inside the cage
-            grassTile_->draw();
-            // Draw the grass outside the cage
-            dryGrassTile_->draw();
-
-            // Draw the box
-            calc::vec3f& direction = ballData_.direction;
-            calc::vec3f& speed = ballData_.speed;
-            calc::mat4f& translation = ballData_.translation;
-
-            translation[2][3] = -1.0;
-            float x = (translation[0][3] += speed[0] * direction[0]);
-            float y = (translation[1][3] += speed[1] * direction[1]);
-
-            // Bounce back on wall hit
-            float hitOffset = 3.0;
-            if (x < +hitOffset - (cageWidth_ / 2) ||
-                x > -hitOffset + (cageWidth_ / 2)) {
-                direction[0] *= -1;
-            }
-
-            if (y < +hitOffset - (cageLength_ / 2) ||
-                y > -hitOffset + (cageLength_ / 2)) {
-                direction[1] *= -1;
-            }
-
-            const calc::vec3f turnRate = ballData_.turnRate * calc::radians(SDL_GetTicks() / 10.0);
-            const calc::mat4f boxMat = calc::transpose(translation
-                                                       * calc::rotate_4x(turnRate[0])
-                                                       * calc::rotate_4y(turnRate[1])
-                                                       * calc::rotate_4z(turnRate[2]));
-            // Do the draw call
-            render::Box& refobject = *ballObject_[ballData_.selectedSkin];
-            refobject.modify(calc::data(boxMat), 0);
-            refobject.draw();
-            // Update screen & return
-            SDL_GL_SwapWindow(window_);
+        if (y < +hitOffset - (cageLength_ / 2) ||
+            y > -hitOffset + (cageLength_ / 2)) {
+            direction[1] *= -1;
         }
 
-        // Points to main SDL window
-        SDL_Window* window_;
+        const calc::vec3f turnRate = ballData_.turnRate * calc::radians(SDL_GetTicks() / 10.0);
+        const calc::mat4f boxMat = calc::transpose(translation
+                                                   * calc::rotate_4x(turnRate[0])
+                                                   * calc::rotate_4y(turnRate[1])
+                                                   * calc::rotate_4z(turnRate[2]));
+        // Do the draw call
+        render::Box& refobject = *ballObject_[ballData_.selectedSkin];
+        refobject.modify(calc::data(boxMat), 0);
+        refobject.draw();
+        // Update screen & return
+        SDL_GL_SwapWindow(window_);
+    }
 
-        // Camera / viewer
-        Camera* camera_;
-        // Contains ball position and rotation information
-        BallData ballData_;
+    // Points to main SDL window
+    SDL_Window* window_;
 
-        // Program, uses instancing;
-        // called to draw grid squares
-        DrawInstancedNoTexture gridDraw_;
-        // Program, uses instancing;
-        // called to draw all textured objects
-        DrawInstancedWithTexture mainDraw_;
+    // Camera / viewer
+    std::shared_ptr<Camera> camera_;
+    // Contains ball position and rotation information
+    BallData ballData_;
 
-        // Map item
-        std::shared_ptr<render::Square>     grassTile_;
-        // Map item
-        std::shared_ptr<render::Square>     dryGrassTile_;
-        // Map item
-        std::shared_ptr<render::GridSquare> gridTile_;
-        // Map item
-        std::shared_ptr<render::Box>        ballObject_[3];
-        // Map item
-        std::shared_ptr<render::Box>        wallObject_;
+    // Program, uses instancing;
+    // called to draw grid squares
+    DrawInstancedNoTexture gridDraw_;
+    // Program, uses instancing;
+    // called to draw all textured objects
+    DrawInstancedWithTexture mainDraw_;
 
-        // Box skins
-        std::vector<unsigned> textureHandles_;
+    // Map item
+    std::shared_ptr<render::Square>     grassTile_;
+    // Map item
+    std::shared_ptr<render::Square>     dryGrassTile_;
+    // Map item
+    std::shared_ptr<render::GridSquare> gridTile_;
+    // Map item
+    std::shared_ptr<render::Box>        ballObject_[3];
+    // Map item
+    std::shared_ptr<render::Box>        wallObject_;
 
-        // Dimension
-        float cageWidth_;
-        // Dimension
-        float cageLength_;
-    };
+    // Box skins
+    std::vector<unsigned> textureHandles_;
+
+    // Color of background
+    calc::vec4f backgroundColor_;
+    // Grid status
+    bool gridEnabled_;
+    // Color of grid lines
+    calc::vec4f gridColor_;
+
+    // Dimension
+    float cageWidth_;
+    // Dimension
+    float cageLength_;
+};
+}
+
+namespace {
+    /*! Encapsulates world and run loop
+     */
+    std::shared_ptr<Runner> runner;
+
+    void run()
+    {
+        runner->run();
+    }
+}
+
+extern "C"
+{
+    EMSCRIPTEN_KEEPALIVE
+    void set_x_speed(int value) {
+        (runner->get_ball()).speed[0] = (float)value / 100.0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_y_speed(int value) {
+        (runner->get_ball()).speed[1] = (float)value / 100.0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_x_turn_rate(int value) {
+        (runner->get_ball()).turnRate[0] = (float)value / 10.0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_y_turn_rate(int value) {
+        (runner->get_ball()).turnRate[1] = (float)value / 10.0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_z_turn_rate(int value) {
+        (runner->get_ball()).turnRate[2] = (float)value / 10.0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_pitch(int value)
+    {
+        (runner->get_camera()).set_scene_pitch(value);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_yaw(int value)
+    {
+        (runner->get_camera()).set_scene_yaw(value);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_roll(int value)
+    {
+        (runner->get_camera()).set_scene_roll(value);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_x_translation(int value)
+    {
+        (runner->get_camera()).set_x_position(value);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_y_translation(int value)
+    {
+        (runner->get_camera()).set_y_position(value);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_scene_z_translation(int value)
+    {
+        (runner->get_camera()).set_z_position(value * -1);
+        (runner->get_camera()).update();
+    }
 }
 
 
-void run(void* arg)
+namespace {
+
+    inline int parse_num(char ch)
+    {
+        if (::isalpha(ch))
+            return ::tolower(ch) - 'a';
+        else
+            return ch - '0';
+    }
+
+    inline void parse_color(const char* str, calc::vec4f& vec /* [out] */)
+    {
+        vec = calc::vec4f(0, 0, 0, 1.0);
+
+        if (::strlen(str) != 7) {
+            return;
+        }
+
+        // Validate str.
+        if (str[0] != '#') {
+            return;
+        }
+
+        unsigned i = 0;
+        for ( ; i != 3; ++i)
+        {
+            char ch1 = str[i * 2 + 1];
+            char ch2 = str[i * 2 + 2];
+
+            // Validate
+            if (!::isalnum(ch1) || !::isalnum(ch2))
+                break;
+            vec[i] = (float)((parse_num(ch1)) * 16 + parse_num(ch2)) / 256.0;
+        }
+    }
+}
+
+extern "C"
 {
-    Runner* runner = reinterpret_cast<Runner*>(arg);
-    runner->run();
+    EMSCRIPTEN_KEEPALIVE
+    void set_background_color(const char* str)
+    {
+        calc::vec4f vec;
+        parse_color(str, vec);
+        runner->set_background_color(vec);
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_grid_color(const char* str)
+    {
+        calc::vec4f vec;
+        parse_color(str, vec);
+        runner->set_grid_color(vec);
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void set_grid_state(bool state)
+    {
+        runner->enable_grid(state);
+    }
 }
 
 /*! Entry point
  */
 int main(void)
 {
-    static const int screenWidth = 1000;
-    static const int screenHeight = 1000;
+    int screenWidth = 1000;
+    int screenHeight = 1000;
 
     // Init SDL and OpenGL
     SDL_Window* window;
@@ -509,19 +700,19 @@ int main(void)
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, screenWidth, screenHeight);
 
-    // Init camera defaults
-    static float xPos = 0;
-    static float yPos = 0;
-    static float zPos = -20.0;
-    static float fov  = 12.5;
-    static float zFar = 1000.0;
-    static float zNear = 0.01;
-
-    // Init. Camera
-    std::shared_ptr<Camera> camera(new Camera(calc::vec3f(xPos, yPos, zPos), fov, zFar, zNear, screenWidth, screenHeight));
-
     // Enter run loop
-    Runner runner(window, camera.get());
-    emscripten_set_main_loop_arg(run, &runner, 0, 1);
+    runner = std::make_shared<Runner>(window, screenWidth, screenHeight);
+
+    // Init defaults...
+    (runner->get_camera()).set_z_position(-80);
+    (runner->get_camera()).set_scene_pitch(25);
+    (runner->get_camera()).update();
+
+    runner->set_grid_color(calc::vec4f(0.75, 0.75, 0.75, 1.0));
+    runner->enable_grid(true);
+    runner->set_background_color(calc::vec4f(0.63, 0.58, 0.10, 1.0));
+
+    // Init main run loop
+    emscripten_set_main_loop(run, 0, 1);
     return 0;
 }

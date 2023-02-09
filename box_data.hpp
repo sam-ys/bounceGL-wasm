@@ -21,7 +21,10 @@ struct BallData {
     calc::mat4f translation;
     /*! ctor.
      */
-    BallData() : selectedSkin(0) , direction(1.0, 1.0, 0) , speed(0, 0, 0) , translation(calc::mat4f::identity()) {}
+    BallData() : selectedSkin(0)
+               , direction(-1.0 /* x-axis is flipped */, 1.0, 0.0)
+               , speed(0.0, 0.0, 0.0)
+               , translation(calc::mat4f::identity()) {}
 };
 
 #endif

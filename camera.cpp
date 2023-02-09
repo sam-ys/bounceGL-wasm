@@ -19,28 +19,29 @@ Camera::Camera(const calc::vec3f& eye,
     update();
 }
 
-void Camera::move(const calc::vec3f& direction)
+void Camera::set_position(const calc::vec3f& value)
 {
-    const calc::mat3f rot = calc::rotate_3x(calc::radians(viewerOrientation_.pitch))
-        * calc::rotate_3y(calc::radians(viewerOrientation_.yaw))
-        * calc::rotate_3z(calc::radians(viewerOrientation_.roll));
-
-    E_.value -= rot * direction;
+    E_.value = value;
 }
 
-void Camera::set_position(const calc::vec3f& direction)
+void Camera::set_x_position(float value)
 {
-    const calc::mat3f rot = calc::rotate_3x(calc::radians(viewerOrientation_.pitch))
-        * calc::rotate_3y(calc::radians(viewerOrientation_.yaw))
-        * calc::rotate_3z(calc::radians(viewerOrientation_.roll));
+    E_.value[0] = value;
+}
 
-    E_.value = rot * direction;
+void Camera::set_y_position(float value)
+{
+    E_.value[1] = value;
+}
+
+void Camera::set_z_position(float value)
+{
+    E_.value[2] = value;
 }
 
 void Camera::reset()
 {
     viewOrientation_ = orientation();
-    viewerOrientation_ = orientation();
 
     (E_.value) = (E_.defaultValue);
     (F_.value) = (F_.defaultValue);
@@ -53,25 +54,19 @@ void Camera::resize(int screenWidthidth, int screenHeighteight)
     screenHeight_ = screenHeighteight;
 }
 
-void Camera::set_scene_rotation(const float pitch, const float yaw, const float roll)
+void Camera::set_scene_pitch(float value)
 {
-    viewOrientation_.pitch = pitch;
-    viewOrientation_.yaw = yaw;
-    viewOrientation_.roll = roll;
+    viewOrientation_.pitch = value;
 }
 
-void Camera::rotate_viewer(const float pitch, const float yaw, const float roll)
+void Camera::set_scene_yaw(float value)
 {
-    viewerOrientation_.pitch += pitch;
-    viewerOrientation_.yaw += yaw;
-    viewerOrientation_.roll += roll;
+    viewOrientation_.yaw = value;
+}
 
-    const calc::mat3f rot = calc::rotate_3z(calc::radians(viewerOrientation_.roll))
-        * calc::rotate_3y(calc::radians(viewerOrientation_.yaw))
-        * calc::rotate_3x(calc::radians(viewerOrientation_.pitch));
-
-    U_.value = rot * U_.defaultValue;
-    F_.value = rot * F_.defaultValue;
+void Camera::set_scene_roll(float value)
+{
+    viewOrientation_.roll = value;
 }
 
 void Camera::calc_look_at()

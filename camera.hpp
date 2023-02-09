@@ -34,17 +34,23 @@ public:
            unsigned screenWidth = 0,
            unsigned screenHeight = 0);
     // Transform
-    void move(const calc::vec3f& direction);
+    void set_position(const calc::vec3f& value);
     // Transform
-    void set_position(const calc::vec3f& direction);
+    void set_x_position(float value);
+    // Transform
+    void set_y_position(float value);
+    // Transform
+    void set_z_position(float value);
     // Transform
     void reset();
     // Transform
     void resize(int screenWidth, int screenHeight);
     // Transform
-    void set_scene_rotation(const float pitch, const float yaw, const float roll);
+    void set_scene_pitch(float value);
     // Transform
-    void rotate_viewer(const float pitch, const float yaw, const float roll);
+    void set_scene_yaw(float value);
+    // Transform
+    void set_scene_roll(float value);
 
     /// @param x, y mouse coordinates
     /// @return ray
@@ -56,18 +62,6 @@ public:
     /// Recalculates look-at and projection matrices;
     /// should be alwas called after moving or rotating camera
     void update();
-
-    float get_pitch() const {
-        return viewOrientation_.pitch;
-    }
-
-    float get_yaw() const {
-        return viewOrientation_.yaw;
-    }
-
-    float get_roll() const {
-        return viewOrientation_.roll;
-    }
 
     float get_screen_width() const; ///> @return the stored screen width
     float get_screen_height() const; ///> @return the stored screen height
@@ -100,7 +94,6 @@ private:
     };
 
     orientation viewOrientation_; //> Current 3d orientation of scene
-    orientation viewerOrientation_; //> Current 3d orientation of first-person viewer
 
     //! struct fov
     /*! Field of view
