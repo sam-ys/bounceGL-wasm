@@ -84,14 +84,12 @@
       }
 
       #ctrl-panel-title-bar {
-
           position: relative;
           padding: 1px;
           height: 40px;
           border-bottom: 2px solid;
           border-color: #000000;
-          border-radius: 3px;
-          background-color: #0066c0;
+          background-color: #285577;
       }
 
       .title-bar-cover {
@@ -100,8 +98,7 @@
           margin-top: -40px;
           border-bottom: 1px solid;
           border-color: #000000;
-          border-radius: 3px;
-          background-color: #0066d0;
+          background-color: #285577;
           opacity: 0.6;
       }
 
@@ -111,24 +108,37 @@
           margin-top: -40px;
           border-bottom: 1px solid;
           border-color: #000000;
-          border-radius: 3px;
-          background-color: #0066d0;
-          opacity: 0.3;
+          background-color: #285577;
+          opacity: 0.05;
       }
 
-      .title-group {
-
+      #title-bar-text {
           padding: 0px;
-          position: absolute;
-          width: 100%;
-          margin-top: -32px;
-          border: 0px none;
+          padding-top: 0px;
+          width: 100px;
+          height: 10px;
+          margin-top: -40px;
+          border-bottom: 0px none;
+          vertical-align: middle;
+          background-color: #285577;
 
           color: #ffffff;
           font-family: 'Noto Sans';
           font-weight: bold;
           font-size: 14px;
       }
+
+      /* TODO
+         #title-bar-move {
+          padding: 1px;
+          border-bottom: 1px solid;
+          border-color: #707070;
+          background-color: #285577;
+
+          color: #505050;
+          font-family: 'Noto Sans';
+          font-size: 12px;
+      }*/
 
       .title-group hr {
           border-top: #202020;
@@ -142,16 +152,20 @@
 
       .ctrl-output {
           display: inline-block;
-          width: 20px;
+          width: 30px;
           border: 0px none;
           border-right: 4px;
           border-color: #a0a0a0;
           border-style: dotted;
+
+          padding-right: 4px;
+          text-align: right;
       }
 
       .colorctrl-output {
           display: inline-block;
-          width: 60px;
+          padding-left: 4px;
+          padding-right: 4px;
           border: 0px none;
           border-right: 4px;
           border-color: #a0a0a0;
@@ -165,7 +179,12 @@
           border-color: #707070;
           border-radius: 3px;
           background-color: #d0d0d0;
+
+          color: #505050;
+          font-family: 'Noto Sans';
+          font-size: 12px;
       }
+
     </style>
   </head>
   <body>
@@ -185,23 +204,33 @@
           <hr />
           <hr />
           <div class="title-bar-cover"><div></div></div>
-          <div class="title-group"><div><center>Control Panel</center></div></div>
+          <center>
+            <div id="title-bar-text"><div><center>Control Panel</center></div></div>
+          </center>
           <div class="title-bar-cover-less"><div></div></div>
         </div>
+
         <!-- Panel ctrl group -->
         <div class="ctrl-group">
           <div>
             <div class="inline">
-              <button id="set-skin-1" name="set-skin-1"><img src="images/awesome-face.png" class="skin-button" /></button>
+              <button id="set-skin-1" name="set-skin-1" onClick='on_skin_click(1);'>
+                <img src="images/awesome-face.png" class="skin-button" />
+              </button>
             </div>
             <div class="inline">
-              <button id="set-skin-2" name="set-skin-2"><img src="images/shocked-face.png" class="skin-button" /></button>
+              <button id="set-skin-2" name="set-skin-2" onClick='on_skin_click(2);'>
+                <img src="images/shocked-face.png" class="skin-button" />
+              </button>
             </div>
             <div class="inline">
-              <button id="set-skin-3" name="set-skin-3"><img src="images/incredulous-face.png" class="skin-button" /></button>
+              <button id="set-skin-3" name="set-skin-3" onClick='on_skin_click(3);'>
+                <img src="images/incredulous-face.png" class="skin-button" />
+              </button>
             </div>
           </div>
         </div>
+
         <!-- Panel ctrl group -->
         <div class="ctrl-group">
           <div>
@@ -244,7 +273,7 @@
             <input type="color" id="background-color" name="background-color" value="#a1951a"
                    onInput='on_color_change("set_background_color", this);'>
             <output><div class="colorctrl-output">#a1951a</div></output>
-            <label for="grid-color">background Color</label>
+            <label for="grid-color">Background Color</label>
           </div>
           <div class="vertical-offset-2px">
             <input type="color" id="grid-color" name="grid-color" value="#c0c0c0"
@@ -255,7 +284,7 @@
           <div>
             <input type="checkbox" id="grid-enabled" name="grid-enabled" value="#ff0000" checked
                    onChange='on_checkbox_change("set_grid_state", this);'>
-            <label for="grid-color">Grid Enabled</label>
+            <label for="grid-color">Enable Grid</label>
           </div>
         </div>
         <!-- Panel ctrl group -->
@@ -378,25 +407,27 @@
       };
     </script>
     <script type='text/javascript'>
-      /*! Calls WASM 
+      /*! WASM call
+       */
+      function on_skin_click(num) { Module.ccall('set_box_skin', null, ['number'], [num]); }
+
+      /*! WASM call 
        */
       function on_range_change(func, elem) {
           (elem.nextElementSibling).firstChild.innerHTML = elem.value;
           Module.ccall(func, null, ['number'], [elem.value]);
       }
 
-      /*! Calls WASM 
+      /*! WASM call 
        */
       function on_color_change(func, elem) {
           elem.nextElementSibling.value = elem.value;
           Module.ccall(func, null, ['string'], [elem.value]);
       }
 
-      /*! Calls WASM 
+      /*! WASM call 
        */
-      function on_checkbox_change(func, elem) {
-          Module.ccall(func, null, ['bool'], [elem.checked]);
-      }
+      function on_checkbox_change(func, elem) { Module.ccall(func, null, ['bool'], [elem.checked]); }
     </script>
     {{{ SCRIPT }}}
   </body>

@@ -553,6 +553,19 @@ namespace {
 extern "C"
 {
     EMSCRIPTEN_KEEPALIVE
+    void set_box_skin(int value)
+    {
+        // Validate before setting value
+        if (value <= 3 &&
+            value >= 1) {
+            (runner->get_ball()).selectedSkin = value - 1;
+        }
+    }
+}
+
+extern "C"
+{
+    EMSCRIPTEN_KEEPALIVE
     void set_x_speed(int value) {
         (runner->get_ball()).speed[0] = (float)value / 100.0;
     }
