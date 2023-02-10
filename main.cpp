@@ -561,6 +561,8 @@ namespace {
      */
     std::shared_ptr<Runner> runner;
 
+    /*! Called by emscripten loop
+     */
     void run()
     {
         runner->run();
@@ -583,33 +585,68 @@ extern "C"
 extern "C"
 {
     EMSCRIPTEN_KEEPALIVE
-    void set_x_speed(int value) {
+    void set_x_speed(int value)
+    {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 20);
+        value = std::max(value, 0);
+
         (runner->get_ball()).speed[0] = (float)value / 100.0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void set_y_speed(int value) {
+    void set_y_speed(int value)
+    {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 20);
+        value = std::max(value, 0);
+
         (runner->get_ball()).speed[1] = (float)value / 100.0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void set_x_turn_rate(int value) {
+    void set_x_turn_rate(int value)
+    {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 25);
+        value = std::max(value, 0);
+
         (runner->get_ball()).turnRate[0] = (float)value / 10.0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void set_y_turn_rate(int value) {
+    void set_y_turn_rate(int value)
+    {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 25);
+        value = std::max(value, 0);
+
         (runner->get_ball()).turnRate[1] = (float)value / 10.0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    void set_z_turn_rate(int value) {
+    void set_z_turn_rate(int value)
+    {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 25);
+        value = std::max(value, 0);
+
         (runner->get_ball()).turnRate[2] = (float)value / 10.0;
     }
 
     EMSCRIPTEN_KEEPALIVE
     void set_scene_pitch(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 45);
+        value = std::max(value, 0);
+
         (runner->get_camera()).set_scene_pitch(value);
         (runner->get_camera()).update();
     }
@@ -617,6 +654,11 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void set_scene_yaw(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 45);
+        value = std::max(value, -45);
+
         (runner->get_camera()).set_scene_yaw(value);
         (runner->get_camera()).update();
     }
@@ -624,6 +666,11 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void set_scene_roll(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 180);
+        value = std::max(value, -180);
+
         (runner->get_camera()).set_scene_roll(value);
         (runner->get_camera()).update();
     }
@@ -631,6 +678,11 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void set_scene_x_translation(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 10);
+        value = std::max(value, -10);
+
         (runner->get_camera()).set_x_position(value);
         (runner->get_camera()).update();
     }
@@ -638,6 +690,11 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void set_scene_y_translation(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 10);
+        value = std::max(value, -10);
+
         (runner->get_camera()).set_y_position(value);
         (runner->get_camera()).update();
     }
@@ -645,6 +702,11 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void set_scene_z_translation(int value)
     {
+        // Just in case
+        // Clamp value
+        value = std::min(value, 100);
+        value = std::max(value, 10);
+
         (runner->get_camera()).set_z_position(value * -1);
         (runner->get_camera()).update();
     }
