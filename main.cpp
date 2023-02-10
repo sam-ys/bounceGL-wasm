@@ -85,7 +85,7 @@ namespace{
 
         unsigned size = gridCoords.size() / 16;
 
-        std::shared_ptr<render::GridSquare> tile = std::make_shared<render::GridSquare>(size);
+        std::shared_ptr<render::GridSquare> tile = std::make_shared<render::GridSquare>(gridWidth * gridLength);
         tile->reset(gridCoords.data(), size);
         return tile;
     }
@@ -164,7 +164,8 @@ namespace{
 
         unsigned size = wallCoords.size() / 16;
 
-        std::shared_ptr<render::Box> object = std::make_shared<render::Box>(wallTAO, wallTAOCount, size);
+        std::shared_ptr<render::Box> object
+            = std::make_shared<render::Box>(wallTAO, wallTAOCount, cageWidth * cageLength);
         object->reset(wallCoords.data(), size);
         return object;
     }
