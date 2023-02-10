@@ -26,6 +26,20 @@
 #include "square.hpp"
 #include "texture.hpp"
 
+namespace {
+
+    /*! Helper
+     *! Converts matrix to float data
+     */
+    inline std::vector<float> copy_matrix_data(const std::vector<calc::mat4f>& mats)
+    {
+        std::vector<float> values(mats.size() * 16);
+        for (::size_t i = 0; i != mats.size(); ++i)
+            ::memcpy(&values[i * 16], calc::data(mats[i]), sizeof(calc::mat4f));
+        return values;
+    }
+}
+
 namespace{
 
     /*! Helper
@@ -60,6 +74,21 @@ namespace{
         }
 
         return grid;
+    }
+
+    /*! Helper
+     *! Loads grid vertices and the grid render target
+     */
+    std::shared_ptr<render::GridSquare> load_grid(unsigned  gridWidth, unsigned  gridLength)
+    {
+        // Load grid tiles
+        const std::vector<float> gridCoords = copy_matrix_data(build_grid(gridWidth, gridLength));
+
+        unsigned size = gridCoords.size() / 16;
+
+        std::shared_ptr<render::GridSquare> tile = std::make_shared<render::GridSquare>(size);
+        tile->reset(gridCoords.data(), size);
+        return tile;
     }
 
     /*! Helper
@@ -125,7 +154,26 @@ namespace{
     }
 
     /*! Helper
-     *! Loads dry grass tiles
+     *! Loads wall vertices and the wall render target
+     */
+    std::shared_ptr<render::Box> load_wall(unsigned  cageWidth,
+                                           unsigned  cageLength,
+                                           unsigned* wallTAO,
+                                           unsigned  wallTAOCount)
+    {
+        const std::vector<float> wallCoords = copy_matrix_data(build_wall(cageWidth, cageLength));
+
+        unsigned size = wallCoords.size() / 16;
+
+        std::shared_ptr<render::Box> object = std::make_shared<render::Box>(wallTAO, wallTAOCount, size);
+        object->reset(wallCoords.data(), size);
+        return object;
+    }
+}
+
+namespace {
+    /*! Helper
+     *! Loads dry grass coordinates and the grass render target
      */
     inline std::shared_ptr<render::Square> load_dry_grass(int gridWidth,
                                                           int gridLength,
@@ -207,6 +255,9 @@ namespace{
         return tile;
     }
 
+    /*! Helper
+     *! Loads fresh grass coordinates and the grass render target
+     */
     std::shared_ptr<render::Square> load_fresh_grass(int cageWidth, int cageLength)
     {
 
@@ -247,17 +298,6 @@ namespace{
         }
 
         return tile;
-    }
-
-    /*! Helper
-     *! Converts matrix to float data
-     */
-    inline std::vector<float> copy_matrix_data(const std::vector<calc::mat4f>& mats)
-    {
-        std::vector<float> values(mats.size() * 16);
-        for (::size_t i = 0; i != mats.size(); ++i)
-            ::memcpy(&values[i * 16], calc::data(mats[i]), sizeof(calc::mat4f));
-        return values;
     }
 }
 
@@ -324,20 +364,7 @@ namespace {
         /*! Helper
          *! Evt. handler
          */
-        void on_window_event(const SDL_Event& e) {
-
-            if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
-            {
-                unsigned screenWidth = e.window.data1;
-                unsigned screenHeight = e.window.data2;
-                glViewport(0, 0, screenWidth, screenHeight);
-
-                // Update camera
-                Camera& refcamera = *camera_;
-                refcamera.resize(screenWidth, screenHeight);
-                refcamera.update();
-            }
-        }
+        void on_window_event(const SDL_Event& e);
 
         /*! Helper
          *! Evt. handler
@@ -378,17 +405,17 @@ namespace {
         // Box skins
         std::vector<unsigned> textureHandles_;
 
+        // Dimension
+        float cageWidth_;
+        // Dimension
+        float cageLength_;
+
         // Color of background
         calc::vec4f backgroundColor_;
         // Grid status
         bool gridEnabled_;
         // Color of grid lines
         calc::vec4f gridColor_;
-
-        // Dimension
-        float cageWidth_;
-        // Dimension
-        float cageLength_;
     };
 
     /*! ctor.
@@ -467,21 +494,13 @@ namespace {
         float gridWidth = 2 * cageWidth;
         float gridLength = 2 * cageLength;
 
+        // Load wall map objects
+        wallObject_ = load_wall(cageWidth, cageLength, wallTAO, sizeof(wallTAO) / sizeof(unsigned));
         // Load grid tiles
-        std::vector<float> grid = copy_matrix_data(build_grid(gridWidth, gridLength));
-
-        gridTile_ = std::make_shared<render::GridSquare>(gridWidth * gridLength);
-        gridTile_->reset(grid.data(), (grid.size() / 16));
-
-        // Load wall
-        std::vector<float> wall = copy_matrix_data(build_wall(cageWidth, cageLength));
-
-        wallObject_ = std::make_shared<render::Box>(wallTAO,
-                                                    sizeof(wallTAO) / sizeof(unsigned),
-                                                    cageWidth * cageLength);
-        wallObject_->reset(wall.data(), (wall.size() / 16));
-
+        gridTile_ = load_grid(gridWidth, gridLength);
+        // Load fresh grass tiles (inside-cage tiles)
         grassTile_ = load_fresh_grass(cageWidth, cageLength);
+        // Load dry grass tiles (outside-cage tiles)
         dryGrassTile_ = load_dry_grass(gridWidth, gridLength, cageWidth, cageLength);
     }
 
@@ -515,6 +534,25 @@ namespace {
         }
 
         render();
+    }
+
+    /*! Helper
+     *! Evt. handler
+     */
+    void Runner::on_window_event(const SDL_Event& e)
+    {
+
+        if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            unsigned screenWidth = e.window.data1;
+            unsigned screenHeight = e.window.data2;
+            glViewport(0, 0, screenWidth, screenHeight);
+
+            // Update camera
+            Camera& refcamera = *camera_;
+            refcamera.resize(screenWidth, screenHeight);
+            refcamera.update();
+        }
     }
 
     /*! Helper
