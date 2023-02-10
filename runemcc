@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# path/to/emsdk_env.sh
+EMSDK_ENV_PATH=""
+source ${EMSDK_ENV_PATH}
+
+# path/to/output
+OUTPUT=build/index.html
+
+em++                                         \
+    *.cpp                                   \
+    stb/*.cpp \
+    -std=c++11                               \
+    -sWASM=1                                 \
+    -sUSE_SDL=2                              \
+    -sUSE_WEBGL2=1                           \
+    -sFULL_ES3                               \
+    -sALLOW_MEMORY_GROWTH=1                  \
+    -I.                                      \
+    -sEXPORTED_RUNTIME_METHODS=ccall         \
+    --shell-file=html-template/template.html \
+    -o ${OUTPUT}
