@@ -8,8 +8,8 @@ source ${EMSDK_ENV_PATH}
 OUTPUT=build/index.html
 
 em++                                         \
-    *.cpp                                   \
-    stb/*.cpp \
+    *.cpp                                    \
+    stb/*.cpp                                \
     -std=c++11                               \
     -sWASM=1                                 \
     -sUSE_SDL=2                              \
