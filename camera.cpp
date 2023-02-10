@@ -39,19 +39,27 @@ void Camera::set_z_position(float value)
     E_.value[2] = value;
 }
 
-void Camera::reset()
+void Camera::reset_position()
+{
+    E_.value = E_.defaultValue;
+}
+
+void Camera::reset_rotation()
 {
     viewOrientation_ = orientation();
-
-    (E_.value) = (E_.defaultValue);
-    (F_.value) = (F_.defaultValue);
-    (U_.value) = (U_.defaultValue);
 }
 
 void Camera::resize(int screenWidthidth, int screenHeighteight)
 {
     screenWidth_ = screenWidthidth;
     screenHeight_ = screenHeighteight;
+}
+
+void Camera::set_scene_rotation(const calc::vec3f& value)
+{
+    viewOrientation_.pitch = value[0];
+    viewOrientation_.yaw = value[1];
+    viewOrientation_.roll = value[2];
 }
 
 void Camera::set_scene_pitch(float value)

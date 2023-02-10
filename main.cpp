@@ -146,10 +146,133 @@ namespace {
 
         /*! ctor.
          */
-        Runner(SDL_Window* window, int screenWidth, int screenHeight) : window_(window)
-                                                                      , backgroundColor_(0.0, 0.0, 0.0, 1.0)
-                                                                      , gridEnabled_(true)
-                                                                      , gridColor_(0.0, 0.0, 0.0, 1.0) {
+        Runner(SDL_Window* window, int screenWidth, int screenHeight);
+
+        /*! Run loop
+         */
+        void run();
+
+        /*! @set
+         */
+        void enable_grid(bool state) {
+            gridEnabled_ = state;
+        }
+
+        bool get_grid_state() const {
+            return gridEnabled_;
+        }
+
+        void set_background_color(const calc::vec4f& vec) {
+            backgroundColor_ = vec;
+        }
+
+        void get_background_color(const calc::vec4f& vec) {
+            backgroundColor_ = vec;
+        }
+
+        void set_grid_color(const calc::vec4f& vec) {
+            gridColor_ = vec;
+        }
+
+        const calc::vec4f& get_grid_color() const {
+            return gridColor_;
+        }
+
+        BallData& get_ball() {
+            return ballData_;
+        }
+
+        const BallData& get_ball() const {
+            return ballData_;
+        }
+
+        Camera& get_camera() {
+            return *camera_;
+        }
+
+        const Camera& get_camera() const {
+            return *camera_;
+        }
+
+    private:
+
+        /*! Helper
+         *! Evt. handler
+         */
+        void on_window_event(const SDL_Event& e) {
+
+            if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
+            {
+                unsigned screenWidth = e.window.data1;
+                unsigned screenHeight = e.window.data2;
+                glViewport(0, 0, screenWidth, screenHeight);
+
+                // Update camera
+                Camera& refcamera = *camera_;
+                refcamera.resize(screenWidth, screenHeight);
+                refcamera.update();
+            }
+        }
+
+        /*! Helper
+         *! Evt. handler
+         */
+        void on_text_input(const SDL_Event&) {}
+
+        /*! Helper
+         *! Renders the scene
+         */
+        void render();
+
+        // Points to main SDL window
+        SDL_Window* window_;
+
+        // Camera / viewer
+        std::shared_ptr<Camera> camera_;
+        // Contains ball position and rotation information
+        BallData ballData_;
+
+        // Program, uses instancing;
+        // called to draw grid squares
+        DrawInstancedNoTexture gridDraw_;
+        // Program, uses instancing;
+        // called to draw all textured objects
+        DrawInstancedWithTexture mainDraw_;
+
+        // Map item
+        std::shared_ptr<render::Square>     grassTile_;
+        // Map item
+        std::shared_ptr<render::Square>     dryGrassTile_;
+        // Map item
+        std::shared_ptr<render::GridSquare> gridTile_;
+        // Map item
+        std::shared_ptr<render::Box>        ballObject_[3];
+        // Map item
+        std::shared_ptr<render::Box>        wallObject_;
+
+        // Box skins
+        std::vector<unsigned> textureHandles_;
+
+        // Color of background
+        calc::vec4f backgroundColor_;
+        // Grid status
+        bool gridEnabled_;
+        // Color of grid lines
+        calc::vec4f gridColor_;
+
+        // Dimension
+        float cageWidth_;
+        // Dimension
+        float cageLength_;
+    };
+
+    /*! ctor.
+     */
+    Runner::Runner(SDL_Window* window, int screenWidth, int screenHeight) : window_(window)
+                                                                          , backgroundColor_(0.0, 0.0, 0.0, 1.0)
+                                                                          , gridEnabled_(true)
+                                                                          , gridColor_(0.0, 0.0, 0.0, 1.0)
+    {
         // Init camera defaults
         static float xPos = 0;
         static float yPos = 0;
@@ -210,10 +333,10 @@ namespace {
         ballObject_[2]->push_back(calc::mat4f::identity());
 
         // Load map...
-        float cageWidth = 30;
+        static float cageWidth = 30;
         cageWidth_ = cageWidth;
 
-        float cageLength = 30;
+        static float cageLength = 30;
         cageLength_ = cageLength;
 
         float gridWidth = 2 * cageWidth;
@@ -335,8 +458,8 @@ namespace {
 
     /*! Run loop
      */
-    void run() {
-
+    void Runner::run()
+    {
         //Handle events on queue
         SDL_Event e;
         while (SDL_PollEvent(&e) != 0)
@@ -365,75 +488,11 @@ namespace {
         render();
     }
 
-    void enable_grid(bool state) {
-        gridEnabled_ = state;
-    }
-
-    bool get_grid_state() const {
-        return gridEnabled_;
-    }
-
-    void set_background_color(const calc::vec4f& vec) {
-        backgroundColor_ = vec;
-    }
-
-    void get_background_color(const calc::vec4f& vec) {
-        backgroundColor_ = vec;
-    }
-
-    void set_grid_color(const calc::vec4f& vec) {
-        gridColor_ = vec;
-    }
-
-    const calc::vec4f& get_grid_color() const {
-        return gridColor_;
-    }
-
-    BallData& get_ball() {
-        return ballData_;
-    }
-
-    const BallData& get_ball() const {
-        return ballData_;
-    }
-
-    Camera& get_camera() {
-        return *camera_;
-    }
-
-    const Camera& get_camera() const {
-        return *camera_;
-    }
-
-private:
-
-    /*! Helper
-     *! Evt. handler
-     */
-    void on_window_event(const SDL_Event& e) {
-
-        if ((e.window).event == SDL_WINDOWEVENT_SIZE_CHANGED)
-        {
-            unsigned screenWidth = e.window.data1;
-            unsigned screenHeight = e.window.data2;
-            glViewport(0, 0, screenWidth, screenHeight);
-
-            // Update camera
-            Camera& refcamera = *camera_;
-            refcamera.resize(screenWidth, screenHeight);
-            refcamera.update();
-        }
-    }
-
-    /*! Helper
-     *! Evt. handler
-     */
-    void on_text_input(const SDL_Event&) {}
-
     /*! Helper
      *! Renders the scene
      */
-    void render() {
+    void Runner::render()
+    {
         // Clear it
         glClearColor(backgroundColor_[0],
                      backgroundColor_[1],
@@ -495,48 +554,6 @@ private:
         // Update screen & return
         SDL_GL_SwapWindow(window_);
     }
-
-    // Points to main SDL window
-    SDL_Window* window_;
-
-    // Camera / viewer
-    std::shared_ptr<Camera> camera_;
-    // Contains ball position and rotation information
-    BallData ballData_;
-
-    // Program, uses instancing;
-    // called to draw grid squares
-    DrawInstancedNoTexture gridDraw_;
-    // Program, uses instancing;
-    // called to draw all textured objects
-    DrawInstancedWithTexture mainDraw_;
-
-    // Map item
-    std::shared_ptr<render::Square>     grassTile_;
-    // Map item
-    std::shared_ptr<render::Square>     dryGrassTile_;
-    // Map item
-    std::shared_ptr<render::GridSquare> gridTile_;
-    // Map item
-    std::shared_ptr<render::Box>        ballObject_[3];
-    // Map item
-    std::shared_ptr<render::Box>        wallObject_;
-
-    // Box skins
-    std::vector<unsigned> textureHandles_;
-
-    // Color of background
-    calc::vec4f backgroundColor_;
-    // Grid status
-    bool gridEnabled_;
-    // Color of grid lines
-    calc::vec4f gridColor_;
-
-    // Dimension
-    float cageWidth_;
-    // Dimension
-    float cageLength_;
-};
 }
 
 namespace {
@@ -693,6 +710,42 @@ extern "C"
     void set_grid_state(bool state)
     {
         runner->enable_grid(state);
+    }
+}
+
+extern "C"
+{
+    EMSCRIPTEN_KEEPALIVE
+    void reset_speed()
+    {
+        (runner->get_ball()).speed[0] = 0;
+        (runner->get_ball()).speed[1] = 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void reset_turn_rate()
+    {
+        (runner->get_ball()).turnRate[0] = 0;
+        (runner->get_ball()).turnRate[1] = 0;
+        (runner->get_ball()).turnRate[2] = 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void reset_scene_translation()
+    {
+        (runner->get_camera()).set_x_position(0);
+        (runner->get_camera()).set_y_position(0);
+        (runner->get_camera()).set_z_position(-80);
+        (runner->get_camera()).update();
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    void reset_scene_rotation()
+    {
+        (runner->get_camera()).set_scene_pitch(25);
+        (runner->get_camera()).set_scene_yaw(0);
+        (runner->get_camera()).set_scene_roll(0);
+        (runner->get_camera()).update();
     }
 }
 

@@ -42,9 +42,13 @@ public:
     // Transform
     void set_z_position(float value);
     // Transform
-    void reset();
+    void reset_position();
+    // Transform
+    void reset_rotation();
     // Transform
     void resize(int screenWidth, int screenHeight);
+    // Transform
+    void set_scene_rotation(const calc::vec3f& value);
     // Transform
     void set_scene_pitch(float value);
     // Transform
