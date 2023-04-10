@@ -89,14 +89,14 @@
       }
 
       #body {
-          margin: auto;
-          width: 1330px;
-          background: #f0f0f0;
+          text-align: center;
+          overflow-x: auto;
       }
 
       #canvas-space {
-          margin-left: 4px;
-          border: 1px solid black;
+          width: 1000px;
+          margin-left: 3px;
+          border: 1px solid #000000;
       }
 
       #canvas-title-bar {
@@ -365,19 +365,21 @@
             </div>
           </div>
         </div>
-        <div id="canvas-space" class="inline">
-          <!-- Panel title bar -->
-          <div id="canvas-title-bar">
-            <hr />
-            <hr />
-            <hr />
-            <div class="title-bar-cover"><div></div></div>
-            <center>
-              <div id="title-bar-text"><div><center>Bounce</center></div></div>
-            </center>
-            <div class="title-bar-cover-less"><div></div></div>
+        <div class="inline">
+          <div id="canvas-space">
+            <!-- Panel title bar -->
+            <div id="canvas-title-bar">
+              <hr />
+              <hr />
+              <hr />
+              <div class="title-bar-cover"><div></div></div>
+              <center>
+                <div id="title-bar-text"><div><center>Bounce</center></div></div>
+              </center>
+              <div class="title-bar-cover-less"><div></div></div>
+            </div>
+            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
           </div>
-          <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
         </div>
       </div>
   </body>
