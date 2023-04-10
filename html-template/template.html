@@ -78,6 +78,15 @@
           margin-top: 2px;
       }
 
+      #maybe-unsupported-browser-banner {
+          padding: 5px;
+          text-align: center;
+          background: #cc0000;
+          border-bottom: 1px solid #000000;
+          font-weight: bold;
+          color: white;
+      }
+
       #ctrl-panel {
           padding: 5px;
           vertical-align: top;
@@ -207,6 +216,7 @@
     </style>
   </head>
   <body>
+    <div id="maybe-unsupported-browser-blurb"></div>
     <div id="body">
       <figure style="overflow:visible;" id="spinner">
         <div class="spinner"></div>
@@ -531,6 +541,25 @@
         document.getElementById("ctrl-output-scene-roll").innerHTML = "0";
 
         Module.ccall('reset_scene_rotation', null);
+    }
+
+    function is_browser_maybe_unsupported() {
+
+        let chromeAgent = navigator.userAgent.indexOf("Chrome");
+        let safariAgent = navigator.userAgent.indexOf("Safari");
+        let edgeAgent = navigator.userAgent.indexOf("Edge");
+
+        return chromeAgent == -1 && safariAgent == -1 && edgeAgent == -1;
+    }
+
+    // Maybe inform user of out of date browser
+    if (is_browser_maybe_unsupported()) {
+        document.getElementById("maybe-unsupported-browser-blurb").innerHTML =
+            "<div id='maybe-unsupported-browser-banner'>" +
+            "Your browser may be unsupported. This page works best with recent versions of Chrome." +
+            "</div>" +
+            "<br />" +
+            "<br />";
     }
   </script>
   {{{ SCRIPT }}}
