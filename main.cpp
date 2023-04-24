@@ -747,6 +747,7 @@ extern "C"
     {
         // Just in case
         // Clamp value
+        value = -value;
         value = std::min(value, 10);
         value = std::max(value, -10);
 
@@ -871,7 +872,7 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     void reset_scene_rotation()
     {
-        (runner->get_camera()).set_scene_pitch(25);
+        (runner->get_camera()).set_scene_pitch(0);
         (runner->get_camera()).set_scene_yaw(0);
         (runner->get_camera()).set_scene_roll(0);
         (runner->get_camera()).update();
@@ -900,7 +901,6 @@ int main(void)
 
     // Init defaults...
     (runner->get_camera()).set_z_position(-80);
-    (runner->get_camera()).set_scene_pitch(25);
     (runner->get_camera()).update();
 
     runner->set_grid_color(calc::vec4f(0.75, 0.75, 0.75, 1.0));

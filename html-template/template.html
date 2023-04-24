@@ -329,9 +329,9 @@
           <!-- Panel ctrl group -->
           <div class="ctrl-group">
             <div>
-              <input type="range" min="0" max="45" value="25" class="slider" id="set-scene-pitch"
+              <input type="range" min="0" max="45" value="0" class="slider" id="set-scene-pitch"
                      onInput='on_range_change("set_scene_pitch", this);'>
-              <output><div id="ctrl-output-scene-pitch" class="ctrl-output">25</div></output>
+              <output><div id="ctrl-output-scene-pitch" class="ctrl-output">0</div></output>
               <label for="set-scene-pitch">Scene Pitch</label>
             </div>
             <div>
@@ -533,11 +533,11 @@
     /*! WASM call
      */
     function on_reset_scene_rotation() {
-        document.getElementById("set-scene-pitch").value = 25;
+        document.getElementById("set-scene-pitch").value = 0;
         document.getElementById("set-scene-yaw").value = 0;
         document.getElementById("set-scene-roll").value = 0;
 
-        document.getElementById("ctrl-output-scene-pitch").innerHTML = "25";
+        document.getElementById("ctrl-output-scene-pitch").innerHTML = "0";
         document.getElementById("ctrl-output-scene-yaw").innerHTML = "0";
         document.getElementById("ctrl-output-scene-roll").innerHTML = "0";
 
