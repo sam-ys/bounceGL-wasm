@@ -82,7 +82,7 @@
           font-family: 'Noto Sans';
           padding: 5px;
           text-align: center;
-          background: #cc0000;
+          background: #cc6600;
           border-bottom: 1px solid #000000;
           font-weight: bold;
           color: white;
@@ -547,10 +547,9 @@
     function is_browser_maybe_unsupported() {
 
         let chromeAgent = navigator.userAgent.indexOf("Chrome");
-        let safariAgent = navigator.userAgent.indexOf("Safari");
-        let edgeAgent = navigator.userAgent.indexOf("Edge");
+        let linuxOS = navigator.userAgent.indexOf("Linux");
 
-        return chromeAgent == -1 && safariAgent == -1 && edgeAgent == -1;
+        return linuxOS != -1 && chromeAgent == -1;
     }
 
     // Maybe inform user of out of date browser
